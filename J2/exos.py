@@ -1,5 +1,5 @@
-print("\n===== TP 1 =====")
-# tp 2 :
+print("\n===== Exercice 1 =====")
+# exo 1 :
 
 import numpy as np
 
@@ -28,10 +28,10 @@ print("surface 90m² → prix", round(a*90 + b, 2), "k€")
 print("\nConclusion : chaque +1m² = +2 000€ de prix.")
 print("La droite y = 2x correspond aux données")
 
-###############################################
+########################################################################################################
 
-print("\n===== TP 3 =====")
-# tp 3 :
+print("\n===== TP 1 =====")
+# TP Descente de Gradient :
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -84,3 +84,116 @@ plt.xlabel("Iterations")
 plt.ylabel("MSE Loss")
 plt.title("Courbe de convergence - Dataset 1")
 plt.show()
+
+####################################################################################################
+
+print("\n===== TP 2 =====")
+# TP Perceptron :
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import Perceptron
+
+def step(s):
+    return 1 if s >= 0 else 0
+
+def perceptron_train(X, y, eta=0.1, epochs=10):
+    w = np.zeros(X.shape[1])
+    b = 0.0       
+    for _ in range(epochs):          
+        for xi, yi in zip(X, y):  
+            s = np.dot(w, xi) + b 
+            y_pred = step(s)     
+            error = yi - y_pred    
+            if error != 0:         
+                w += eta * error * xi
+                b += eta * error
+    return w, b
+
+X = np.array([[0,0],[0,1],[1,0],[1,1]])
+y_and = np.array([0, 0, 0, 1])
+y_or  = np.array([0, 1, 1, 1])
+y_xor = np.array([0, 1, 1, 0])
+
+w_and, b_and = perceptron_train(X, y_and)
+w_or,  b_or  = perceptron_train(X, y_or)
+w_xor, b_xor = perceptron_train(X, y_xor)
+
+print("AND : poids =", w_and, "biais =", b_and)
+print("OR  : poids =", w_or,  "biais =", b_or)
+print("XOR : poids =", w_xor, "biais =", b_xor)
+
+def plot_decision_boundary(X, y, w, b, title):
+    xx, yy = np.meshgrid(np.linspace(-0.5, 1.5, 100),
+                         np.linspace(-0.5, 1.5, 100))
+    Z = np.array([step(w[0]*x_ + w[1]*y_ + b)
+                  for x_, y_ in zip(xx.ravel(), yy.ravel())])
+    Z = Z.reshape(xx.shape)
+
+    plt.contourf(xx, yy, Z, alpha=0.3, cmap=plt.cm.Paired)
+    plt.scatter(X[:,0], X[:,1], c=y, s=100,
+                edgecolors='k', cmap=plt.cm.Paired)
+    plt.xlabel('x1')
+    plt.ylabel('x2')
+    plt.title(title)
+    plt.show()
+
+plot_decision_boundary(X, y_and, w_and, b_and, "Perceptron - AND")
+plot_decision_boundary(X, y_or,  w_or,  b_or,  "Perceptron - OR")
+plot_decision_boundary(X, y_xor, w_xor, b_xor, "Perceptron - XOR (échoue !)")
+
+for nom, y in [("AND", y_and), ("OR", y_or), ("XOR", y_xor)]:
+    clf = Perceptron(max_iter=10, eta0=0.1)
+    clf.fit(X, y)
+    print(f"\nScikit-learn {nom}")
+    print("Poids :", clf.coef_)
+    print("Biais :", clf.intercept_)
+    plot_decision_boundary(X, y, clf.coef_[0], clf.intercept_[0],
+                           f"Sklearn - {nom}")
+
+print("\nConclusion :")
+print("AND et OR  → perceptron converge")
+print("XOR        → perceptron échoue (pas linéairement séparable)")
+print("Solution   → il faut un réseau multicouche (MLP)")
+
+
+from matplotlib.animation import FuncAnimation
+
+def animate_perceptron(X, y, title):
+    w = np.zeros(X.shape[1])
+    b = 0.0
+    eta = 0.1
+    history = []
+
+    for _ in range(10): 
+        for xi, yi in zip(X, y):
+            s = np.dot(w, xi) + b
+            y_pred = step(s)
+            error = yi - y_pred
+            if error != 0:
+                w += eta * error * xi
+                b += eta * error
+            history.append((w.copy(), b)) 
+
+    fig, ax = plt.subplots()
+    xx, yy = np.meshgrid(np.linspace(-0.5, 1.5, 100),
+                         np.linspace(-0.5, 1.5, 100))
+
+    def update(frame):
+        ax.clear()
+        w_f, b_f = history[frame]
+        Z = np.array([step(w_f[0]*x_ + w_f[1]*y_ + b_f)
+                      for x_, y_ in zip(xx.ravel(), yy.ravel())])
+        Z = Z.reshape(xx.shape)
+        ax.contourf(xx, yy, Z, alpha=0.3, cmap=plt.cm.Paired)
+        ax.scatter(X[:,0], X[:,1], c=y, s=100,
+                   edgecolors='k', cmap=plt.cm.Paired)
+        ax.set_title(f"{title} — itération {frame+1}")
+        ax.set_xlabel('x1')
+        ax.set_ylabel('x2')
+
+    ani = FuncAnimation(fig, update, frames=len(history), interval=200)
+    plt.show()
+
+animate_perceptron(X, y_and, "AND")
+animate_perceptron(X, y_or,  "OR")
