@@ -120,3 +120,63 @@ print("TensorFlow XOR")
 print("Loss finale:", round(history.history['loss'][-1], 4))
 print("Prédictions :", np.round(model.predict(X)))
 print("Valeurs exactes :", y.T)
+
+###########################################################################
+
+print("\n===== TP final =====")
+# tp final :
+
+import numpy as np
+
+# Entrées : x1 et x2
+X = np.array([
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1],
+    [2, 1]
+])
+
+# Sortie y = 3*x1 - 2*x2 + 1
+y = np.array([1, -1, 4, 2, 6])
+
+# EXERCICE 1 :
+def predict(x, w, b):
+    """
+    x : vecteur des entrées [x1, x2]
+    w : vecteur des poids [w1, w2]
+    b : biais
+    """
+    y_pred = np.dot(w, x) + b  
+    return y_pred
+
+# EXERCICE 2 :
+def mse(y_true, y_pred):
+    error = np.mean((y_true - y_pred)**2)  # moyenne des carrés des erreurs
+    return error
+
+# EXERCICE 3 :
+def train(X, y, lr=0.1, epochs=10000):
+    w = np.array([0.0, 0.0])  # w1, w2
+    b = 0.0
+    n = len(X)
+
+    for i in range(epochs):
+        y_pred = np.array([predict(x, w, b) for x in X])
+
+        dw = (-2/n) * np.dot(X.T, (y - y_pred))  
+        db = (-2/n) * np.sum(y - y_pred)          
+
+        w = w - lr * dw  
+        b = b - lr * db  
+
+    return w, b
+
+# EXERCICE 4 :
+w, b = train(X, y)
+
+print("Poids appris :", w)
+print("Biais appris :", b)
+
+x_test = np.array([3, 2])
+print("Prediction pour x_test =", predict(x_test, w, b))
