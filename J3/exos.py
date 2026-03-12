@@ -68,3 +68,55 @@ plt.show()
 # Une couche cachée transforme les données dans un nouvel espace où elles deviennent séparables. Par exemple :
 # Couche 1 apprend AND et OR séparément
 # Couche 2 combine les deux pour faire XOR
+
+#############################################################################
+
+print("\n===== TP 2 =====")
+# tp 2 :
+
+import numpy as np
+
+X = np.array([[0,0],[0,1],[1,0],[1,1]])
+y = np.array([[0],[1],[1],[0]])
+
+sigmoid = lambda x: 1/(1+np.exp(-x))
+sigmoid_derivative = lambda x: x*(1-x)
+
+np.random.seed(1)                               
+W1, b1 = np.random.randn(2,4), np.zeros((1,4)) 
+W2, b2 = np.random.randn(4,1), np.zeros((1,1))   
+lr = 0.1
+
+for _ in range(10000):
+    h = sigmoid(X@W1 + b1)
+    out = sigmoid(h@W2 + b2)
+    d_out = (y - out) * sigmoid_derivative(out)
+    d_h = d_out@W2.T * sigmoid_derivative(h)
+    W2 += h.T @ d_out * lr; b2 += d_out.sum(0,keepdims=True) * lr
+    W1 += X.T @ d_h * lr; b1 += d_h.sum(0,keepdims=True) * lr
+
+print("Prédictions :", np.round(out))
+print("Valeurs exactes :", y.T)
+
+#TensorFlow
+
+import tensorflow as tf
+import numpy as np
+
+X = np.array([[0,0],[0,1],[1,0],[1,1]], dtype=float)
+y = np.array([[0],[1],[1],[0]], dtype=float)
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(4, activation='sigmoid', input_shape=(2,)), 
+    tf.keras.layers.Dense(1, activation='sigmoid')                    
+])
+
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01),
+              loss='mse')
+
+history = model.fit(X, y, epochs=2000, verbose=0)
+
+print("TensorFlow XOR")
+print("Loss finale:", round(history.history['loss'][-1], 4))
+print("Prédictions :", np.round(model.predict(X)))
+print("Valeurs exactes :", y.T)
